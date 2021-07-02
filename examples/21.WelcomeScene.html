@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>webxr - model load</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="author" content="Irene Alvarado" />
+    <link type="text/css" rel="stylesheet" href="main.css" />
+  </head>
+
+  <body>
+    <div id="overlay-ui"></div>
+    <div id="console-ui"></div>
+    <script src="https://cdn.jsdelivr.net/npm/resonance-audio/build/resonance-audio.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+      eruda.init({
+        container: document.getElementById("console-ui")
+      });
+    </script>
+
+    <script type="module">
+      import * as THREE from "../threejs/three.module.js";
+      import { ARButton } from "../threejs/jsm/webxr/ARButton.js";
+      import { GLTFLoader } from "../threejs/jsm/loaders/GLTFLoader.js";
+      import { GUI } from "../threejs/jsm/libs/dat.gui.module.js";
+      import { PositionalAudioHelper } from "../threejs/jsm/helpers/PositionalAudioHelper.js";
+
+      let container;
+      let camera, scene, renderer;
+      let controller;
+      let loader;
+      let listener;
+      let sounds = [];
+      let cube;
+      let isAudioInitialized = false;
+      let isAudioPlaying = false;
+
+      init();
+      animate();
+
+      function init() {
+        container = document.createElement("div");
+        document.body.appendChild(container);
+
+        // All three.js scenes need three things: a scene, a camera, and a renderer
+        // For more info read: https://threejs.org/docs/#manual/en/introduction/Creating-a-scene
+
+        // #1 create the scene, although there's nothing in it just yet
+        scene = new THREE.Scene();
+
+        // #2 create the camera
+        camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+
+        // #3 Pick a three.js renderer
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.xr.enabled = true; // we have to enable the renderer for webxr
+        container.appendChild(renderer.domElement);
+        
+        
+        // Everything hereafter is optional things we want to add to the scene
+
+        // Add a light to the cene
+        var light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+        light.position.set(0.5, 1, 0.25);
+        scene.add(light);
+
+        const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        const material = new THREE.MeshBasicMaterial({
+          color: 0x00ff00,
+          opacity: 0,
+          transparent: true
+        });
+        cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+
+       // Load the GLTF space model
+        loader = new GLTFLoader();
+        loader.load(
+          // resource URL
+          "../model/flowerVase/scene.gltf",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(0.5/100); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x = -2; // once rescaled, position the model where needed
+            gltf.scene.position.y = 0;
+            gltf.scene.position.z = -5;
+            gltf.scene.rotateY(-Math.PI / 2);
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+          loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2Ftablesimp.glb?v=1618791160378",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(580); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x = -10; // once rescaled, position the model where needed
+            gltf.scene.position.y = -25;
+            gltf.scene.position.z = -15;
+            gltf.scene.rotateY(-Math.PI / 2);
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+        
+          loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2Fuploads_files_2605484_lamp.glb?v=1618798047674",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(1.5); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x = 0; // once rescaled, position the model where needed
+            gltf.scene.position.y = 7;
+            gltf.scene.position.z = -14;
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+        
+          loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2Fbookts.glb?v=1618799185167",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(0.75); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x = -2; // once rescaled, position the model where needed
+            gltf.scene.position.y = -1;
+            gltf.scene.position.z = -2;
+            gltf.scene.rotateY(-Math.PI / 2);
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+        
+           
+          loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2Fframe1.glb?v=1619036586870",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(200); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x = -2; // once rescaled, position the model where needed
+            gltf.scene.position.y = 8;
+            gltf.scene.position.z = -50;
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+          loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2Fbandera.glb?v=1619036227810",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(600); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x = 15; // once rescaled, position the model where needed
+            gltf.scene.position.y = 8;
+            gltf.scene.position.z = -50;
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+        
+          loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2FmorrisChair.glb?v=1619026669824",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(120); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x = 28; // once rescaled, position the model where needed
+            gltf.scene.position.y = -25;
+            gltf.scene.position.z = -10;
+            gltf.scene.rotateY(-Math.PI / 2);
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+                  loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2FTristan.glb?v=1619044418256",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(200); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x = 35; // once rescaled, position the model where needed
+            gltf.scene.position.y = -2;
+            gltf.scene.position.z = -25;
+            gltf.scene.rotateY(-Math.PI / 2);
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+        
+                loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2Fframe3.glb?v=1619045052020",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(200); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x = 35; // once rescaled, position the model where needed
+            gltf.scene.position.y = 1;
+            gltf.scene.position.z = -2;
+            gltf.scene.rotateY(3*Math.PI/2);
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+        
+              loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2Flhlogon.glb?v=1619055670895",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(200); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x =-10; // once rescaled, position the model where needed
+            gltf.scene.position.y = 2;
+            gltf.scene.position.z = -3;
+            //gltf.scene.rotateY(Math.PI/2);
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+        
+              loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2Fsidetable.glb?v=1619056166369",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(4/100); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x =35//once  rescaled, position the model where needed
+            gltf.scene.position.y = -25;
+            gltf.scene.position.z = -45;
+            //gltf.scene.rotateY(Math.PI/2);
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+                
+              loader = new GLTFLoader();
+          loader.load(
+          // resource URL
+          "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2Ftorito.glb?v=1619056174497",
+          // onLoad callback: what get's called once the full model has loaded
+          gltf => {
+            gltf.scene.scale.multiplyScalar(0.7); // adjust scalar factor to match your scene scale//
+            gltf.scene.position.x =27; // once rescaled, position the model where needed
+            gltf.scene.position.y = -9;
+            gltf.scene.position.z = -34;
+            gltf.scene.rotateY(Math.PI/2);
+            scene.add(gltf.scene);
+          },
+          // onProgress callback: optional function for showing progress on model load
+          undefined,
+          // onError callback
+          error => {
+            console.error(error);
+          }
+        );
+        
+        
+        
+        
+        //loader= new GLTFLoader();
+        // loader.load(
+        //   // resource URL
+        //   "../model/table/table.gltf",
+        //   // onLoad callback: what get's called once the full model has loaded
+        //   gltf => {
+        //     gltf.scene.scale.multiplyScalar(1); // adjust scalar factor to match your scene scale//
+        //     gltf.scene.position.x = 0 // once rescaled, position the model where needed
+        //     gltf.scene.position.y = -12;
+        //     gltf.scene.position.z = -14;
+        //     scene.add(gltf.scene);
+        //   },
+        //   // onProgress callback: optional function for showing progress on model load
+        //   undefined,
+        //   // onError callback
+        //   error => {
+        //     console.error(error);
+        //   }
+        // );
+
+        // Add an AR button to the window
+        /*
+        document.body.appendChild(
+          ARButton.createButton(renderer, {
+            optionalFeatures: ["dom-overlay"],
+            domOverlay: { root: document.body }
+          })
+        );
+        */
+        document.body.appendChild(ARButton.createButton(renderer));
+        const arButtonEl = document.getElementById("ARButton");
+        arButtonEl.addEventListener("click", toggleAudio);
+
+        // const gui = new GUI();
+        // gui.open();
+        window.addEventListener("resize", onWindowResize, false);
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      // this function is only called one time
+      function animate() {
+        // here we set the render function to be called in a loop
+        renderer.setAnimationLoop(render);
+      }
+
+      // render function called on a loop every time the screen is refreshed
+      // which typically means 60 times a second (60 frames per second)
+      function render() {
+        const pos = getCameraPosition();
+
+        if (resonanceAudioScene !== undefined) {
+          // resonanceAudioScene.setListenerPosition(pos.x, pos.y, pos.z);
+          // set position and orienation of listener based on camera/cube
+          resonanceAudioScene.setListenerFromMatrix(cube.matrixWorld);
+        }
+        renderer.render(scene, camera);
+      }
+
+      // Keep the cube in front of the camera
+      cube.onBeforeRender = function() {
+        // order is important here!
+
+        // First set cube in same direction as camera
+        const distanceFromCamera = 0.1;
+        const quat = getCameraRotation();
+        const cameraDirection = new THREE.Vector3(0, 0, 1);
+        cameraDirection.applyQuaternion(quat);
+        cameraDirection.multiplyScalar(distanceFromCamera);
+        cube.position.set(-cameraDirection.x, -cameraDirection.y, -cameraDirection.z);
+
+        // Then translate the cube based on the camera position
+        const pos = getCameraPosition();
+        cube.translateX(pos.x);
+        cube.translateY(pos.y);
+        cube.translateZ(pos.z);
+      };
+
+      function getCameraPosition() {
+        const position = new THREE.Vector3();
+        position.setFromMatrixPosition(camera.matrixWorld); // x, y, z
+        return position;
+      }
+
+      function getCameraRotation() {
+        const rotation = new THREE.Quaternion();
+        rotation.setFromRotationMatrix(camera.matrixWorld);
+        return rotation;
+      }
+
+      /***************************/
+      /* Resonance Audio section */
+      /***************************/
+
+      let audioContext;
+      let resonanceAudioScene;
+
+      function toggleAudio() {
+        // only will be done one time
+        if (!isAudioInitialized) {
+          audioInit();
+          createPositionalAudio();
+          isAudioInitialized = true;
+          isAudioPlaying = true;
+        } else {
+          if (isAudioPlaying) {
+            stopAudio();
+            isAudioPlaying = false;
+          } else {
+            startAudio();
+            isAudioPlaying = true;
+          }
+        }
+      }
+
+      // Create an AudioContext
+      // Can only do so AFTER user does a gesture on the page
+      function audioInit() {
+        // have to set AudioContext for different browsers
+        const AudioContext = window.AudioContext || window.webkitAudioContext || false;
+        window.AudioContext = AudioContext;
+
+        audioContext = new AudioContext();
+
+        // Create a Resonance Audio scene and pass it he AudioContext.
+        resonanceAudioScene = new ResonanceAudio(audioContext);
+
+        // Connect the scene’s binaural output to stereo out.
+        resonanceAudioScene.output.connect(audioContext.destination);
+      }
+
+      function createPositionalAudio() {
+        // Create an AudioElement.
+        const audioElement = document.createElement("audio");
+
+        // Load an audio file into the AudioElement
+        // do not load a music file as ogg, won't play in Firefox
+        audioElement.src = "https://cdn.glitch.com/2df49a74-389c-49d2-aa18-e437b000ce10%2FFirstScene.mp3?v=1618878989807";
+        audioElement.crossOrigin = "anonymous";
+        audioElement.loop = true;
+
+        // Generate a MediaElementSource from the AudioElement.
+        const audioElementSource = audioContext.createMediaElementSource(audioElement);
+
+        // Add the MediaElementSource to the scene as an audio input source.
+        const source = resonanceAudioScene.createSource();
+        audioElementSource.connect(source.input);
+
+        // Set the source position relative to the room center (source default position).
+        // More API references here: https://resonance-audio.github.io/resonance-audio/reference/web/Source
+        source.setPosition(0, 0, -0.5);
+        source.setMaxDistance(1.5);
+        source.setRolloff("linear"); // can be logarithmic or none
+
+        // alpha, sharpness
+        // alpha:  where 0 is an omnidirectional pattern, 1 is a bidirectional pattern, 0.5 is a cardiod pattern
+        // Find directivity patterns here: https://naiant.com/wp-content/uploads/mic-polar-patterns.jpg
+        // More info here: https://resonance-audio.github.io/resonance-audio/reference/web/Source
+        source.setDirectivityPattern(0, 1);
+
+        // // create an object for the sound to play from
+        const sphere = new THREE.SphereBufferGeometry(0.2, 32, 16);
+        const material = new THREE.MeshBasicMaterial({
+          color: 0x00ff00,
+          opacity: 0,
+          transparent: true
+        });
+        const mesh = new THREE.Mesh(sphere, material);
+        mesh.position.set(0, 0, -50);
+        scene.add(mesh);
+
+        // Play the audio.
+        audioElement.play();
+        sounds.push(audioElement);
+      }
+
+      function startAudio() {
+        for (const sound of sounds) {
+          sound.play();
+        }
+      }
+
+      function stopAudio() {
+        for (const sound of sounds) {
+          sound.pause();
+          // sound.currentTime = 0; // if you want to restart
+        }
+      }
+    </script>
+  </body>
+</html>
